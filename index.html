@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>汉字的一生 · 从甲骨文到楷书</title>
+<meta name="description" content="输入任意一个汉字，看它三千多年间从甲骨文、金文、小篆、隶书到楷书的字形演变，以时间轴动画呈现。">
+<meta name="theme-color" content="#f2ece1">
+<meta property="og:title" content="汉字的一生">
+<meta property="og:description" content="输入任意一个汉字，看它从甲骨文到楷书的字形演变。">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- 全局纸张颗粒滤镜 -->
+<svg class="defs" aria-hidden="true">
+  <defs>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+    </filter>
+    <filter id="inkbleed" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="paper-grain" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="brand" href="./" aria-label="汉字的一生 首页">
+      <span class="brand-seal">漢</span>
+      <span class="brand-text">
+        <strong>汉字的一生</strong>
+        <em>Life of a Hanzi</em>
+      </span>
+    </a>
+    <nav class="top-nav">
+      <a href="#stage">演变</a>
+      <a href="#timeline">时间轴</a>
+      <a href="#about">字源库</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ── 输入区 ── -->
+  <section class="hero" id="top">
+    <div class="wrap">
+      <p class="kicker">三千年，一笔一画地走</p>
+      <h1 class="display">输入一个字<br><span class="display-sub">看它怎样长大</span></h1>
+      <p class="lede">同一个字，在龟甲、青铜、刻石、竹简与纸上走完了自己的一生。<br>任选一字，让时间替你把它写一遍。</p>
+
+      <form class="search" id="search" autocomplete="off">
+        <label class="search-box">
+          <span class="search-icon" aria-hidden="true">字</span>
+          <input id="q" type="text" inputmode="text" maxlength="4"
+                 placeholder="输入任意汉字，如 日 水 馬 學" aria-label="输入汉字" spellcheck="false">
+          <button type="button" class="search-clear" id="clear" aria-label="清空" hidden>×</button>
+        </label>
+        <button class="search-go" type="submit">看演变</button>
+        <button class="search-random" id="randomBtn" type="button" title="随便看一个字" aria-label="随机一字">随机</button>
+      </form>
+
+      <div class="quick" id="quick" aria-label="推荐字"></div>
+      <p class="hint" id="hint">收录 <b id="stat-count">—</b> 个汉字，含 <b id="stat-ancient">—</b> 个可追溯古文字形</p>
+    </div>
+  </section>
+
+  <!-- ── 主舞台 ── -->
+  <section class="stage-wrap" id="stage" hidden>
+    <div class="wrap">
+      <div class="stage">
+        <!-- 左：字形 -->
+        <div class="glyph-col">
+          <div class="glyph-frame" id="glyphFrame">
+            <div class="era-wash" aria-hidden="true"></div>
+            <div class="glyph-era" id="glyphEra" aria-hidden="true">商</div>
+            <svg class="glyph" id="glyph" viewBox="0 0 1000 1000" role="img" aria-live="polite">
+              <g id="layerA" class="layer"><path id="pathA"/></g>
+              <g id="layerB" class="layer"><path id="pathB"/></g>
+            </svg>
+            <div class="glyph-stamp" id="glyphStamp" aria-hidden="true"><span>甲骨</span></div>
+            <div class="glyph-pips" id="glyphPips" aria-hidden="true"></div>
+            <div class="glyph-empty" id="glyphEmpty" hidden>
+              <span class="glyph-empty-char" id="glyphEmptyChar">字</span>
+              <p>此期未见传世字形</p>
+            </div>
+            <div class="glyph-loader" id="glyphLoader" aria-hidden="true"><i></i></div>
+          </div>
+          <div class="glyph-caption" id="glyphCaption"></div>
+        </div>
+
+        <!-- 右：说明 -->
+        <aside class="info-col">
+          <div class="char-head">
+            <div class="char-big" id="charBig">日</div>
+            <div class="char-meta">
+              <div class="pinyin" id="charPinyin">rì</div>
+              <div class="facts" id="charFacts"></div>
+            </div>
+          </div>
+          <p class="definition" id="charDef"></p>
+
+          <dl class="dossier" id="dossier"></dl>
+
+          <div class="note-card">
+            <div class="note-head">
+              <span class="note-dot"></span>
+              <strong id="noteName">甲骨文</strong>
+              <span class="note-span" id="noteSpan"></span>
+            </div>
+            <p class="note-body" id="noteBody"></p>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-play" id="play" type="button">
+              <span class="btn-ico" aria-hidden="true"></span><span class="btn-label">自动演进</span>
+            </button>
+            <button class="btn btn-ghost" id="stepBack" type="button" aria-label="上一期">←</button>
+            <button class="btn btn-ghost" id="stepFwd" type="button" aria-label="下一期">→</button>
+            <button class="btn btn-ghost btn-copy" id="copy" type="button" title="复制链接">分享</button>
+          </div>
+          <div class="source" id="source"></div>
+        </aside>
+      </div>
+
+      <!-- ── 时间轴 ── -->
+      <div class="timeline" id="timeline">
+        <div class="tl-head">
+          <span class="tl-title">五体演变 <b>·</b> 一条时间轴</span>
+          <span class="tl-hint"><kbd>←</kbd><kbd>→</kbd> 切换 · <kbd>空格</kbd> 播放</span>
+        </div>
+        <ol class="tl-items" id="tlItems"></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 全字表 ── -->
+  <section class="about" id="about">
+    <div class="wrap">
+      <h2 class="sec-title">字源库</h2>
+      <p class="sec-lead">
+        字形取自维基共享资源的公有领域古文字矢量库（以《说文》小篆、殷周金文、殷墟甲骨为底本），
+        今文字以霞鹜文楷描摹轮廓。共 <b id="stat-count2">—</b> 字可查，其中 <b id="stat-ancient2">—</b> 字能一路追溯到甲骨。
+      </p>
+      <div class="lib-filters" id="libFilters" role="group" aria-label="字库筛选">
+        <button type="button" class="chip on" data-filter="all">全部</button>
+        <button type="button" class="chip" data-filter="quad">五体俱全</button>
+        <button type="button" class="chip" data-filter="oracle">有甲骨文</button>
+        <button type="button" class="chip" data-filter="full">仅今文字</button>
+      </div>
+      <div class="library" id="library"></div>
+      <p class="lib-more"><button class="btn btn-ghost" id="libMore" type="button">再载入一批</button></p>
+    </div>
+  </section>
+
+  <section class="credits" id="credits">
+    <div class="wrap credits-inner">
+      <div>
+        <h2 class="sec-title small">字形与数据来源</h2>
+        <ul class="credit-list">
+          <li><b>甲骨文 · 金文 · 小篆 · 隶书</b> — <a href="https://commons.wikimedia.org/wiki/Category:Ancient_Chinese_characters" target="_blank" rel="noopener">Wikimedia Commons · Ancient Chinese characters</a>（公有领域 / CC0），字表源流以《说文解字》《殷周金文集成》为准。</li>
+          <li><b>楷书字形</b> — <a href="https://github.com/lxgw/LxgwWenKai" target="_blank" rel="noopener">霞鹜文楷 LXGW WenKai</a>（SIL Open Font License 1.1），由字体轮廓转曲得到。</li>
+          <li><b>读音 · 笔画 · 部首 · 释义</b> — <a href="https://www.unicode.org/charts/unihan.html" target="_blank" rel="noopener">Unicode 统一汉字数据库 Unihan</a>（《通用规范汉字表》读音与序号）。</li>
+        </ul>
+      </div>
+      <p class="credits-note">
+        本站为静态页面，无后端、无跟踪。<br>
+        字形为古代拓本与写本的摹写，各家释读或有出入，仅供观览。
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© <span id="year"></span> 汉字的一生</span>
+    <span class="foot-dot">·</span>
+    <a href="https://github.com/luoke-ai/hanzi-life" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
