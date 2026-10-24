@@ -369,7 +369,7 @@
   }
 
   /* ── 主流程：选字 ── */
-  async function showChar(ch, push = true) {
+  async function showChar(ch, push = true, opts = {}) {
     ch = (ch || '').trim();
     const m = ch.match(CJK);
     if (!m) return false;
@@ -416,7 +416,7 @@
 
     // 滚动到舞台（若在首屏外）
     const rect = $('stage').getBoundingClientRect();
-    if (rect.top > window.innerHeight * 0.55) {
+    if (opts.scroll !== false && rect.top > window.innerHeight * 0.55) {
       $('stage').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
     }
     return true;
@@ -486,7 +486,7 @@
   function randomChar() {
     const pool = state.ancientChars && state.ancientChars.length
       ? state.ancientChars
-      : state.index.chars.split('');
+      : [...state.index.chars];
     let ch = state.char;
     for (let i = 0; i < 30 && ch === state.char; i++) {
       ch = pool[Math.floor(Math.random() * pool.length)];
@@ -503,7 +503,7 @@
   };
 
   function buildLibrary() {
-    const all = state.index.chars.split('');
+    const all = [...state.index.chars];
     state.libPool = all;
     state.libFilter = 'all';
 
@@ -535,7 +535,7 @@
 
   function applyFilter() {
     const pred = LIB_FILTERS[state.libFilter] || (() => true);
-    state.libPool = state.index.chars.split('').filter(pred);
+    state.libPool = [...state.index.chars].filter(pred);
     state.libShown = 0;
     $('library').innerHTML = '';
     showMoreChars(180);
@@ -688,13 +688,13 @@
     const quick = $('quick');
     quick.innerHTML = '<span class="quick-label">试试</span>';
     const picks = QUICK.filter((c) => state.index.chars.includes(c));
-    const quadList = (state.index.quadChars || '').split('');
+    const quadList = [...(state.index.quadChars || '')];
     const quadPicked = [];
     for (const ch of quadList) {
       if (quadPicked.length >= 4) break;
       if (!QUICK.includes(ch) && picks.length < 8) quadPicked.push(ch);
     }
-    const extra = state.index.chars.split('').filter((c) => !QUICK.includes(c));
+    const extra = [...state.index.chars].filter((c) => !QUICK.includes(c));
     while (picks.length < 12 && extra.length) {
       const c = extra.shift();
       if (state.index.chars.includes(c)) picks.push(c);
@@ -717,9 +717,10 @@
     if (fromUrl && CJK.test(fromUrl)) {
       await showChar(fromUrl, false);
     } else {
-      // 首屏随机给一个默认字
-      const seed = picks[0];
-      if (seed) $('q').placeholder = `输入任意汉字，如 ${seed} 水 馬 學`;
+      // 首屏直接展示一个字，让舞台与时间轴立刻可见（不滚动）
+      const seed = state.index.chars.includes('日') ? '日' : picks[0];
+      if (seed) showChar(seed, false, { scroll: false });
+      if (picks[0]) $('q').placeholder = `输入任意汉字，如 ${picks[0]} 水 馬 學`;
     }
   }
 
