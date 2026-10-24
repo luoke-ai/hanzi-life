@@ -72,9 +72,18 @@ def main():
     kai = json.load(open(os.path.join(OUT, "..", ".cache", "kai.json"), encoding="utf-8"))
     sel = json.load(open(f"{BASE}/selection.json", encoding="utf-8"))
 
+    # 字库首屏的「明星字」：象形性强、形变好看的字先排
+    FEATURED = "日月山水火人木女口目手心目耳心王玉田石竹米禾刀弓矢犬牛羊虎象馬龍魚鳥車門雨雲花學家安好明大中小上下中天子老生死來去見言食走行舟川林森貝絲龜燕鹿兔鼎鼓爵壺尊盤鐘"
+    featured = [c for c in dict.fromkeys(FEATURED) if c in kai]
+
     def rank(ch):
+        """排序：先「明星字」，再按可考字形数量，最后按常用度。"""
         m = meta.get(ch, {})
-        return (m.get("lvl", 99999), ord(ch))
+        rec = ancient.get(ch, {})
+        n = len(rec) if rec else 0
+        if ch in featured:
+            return (0, featured.index(ch), 0, 0)
+        return (1, -n, m.get("lvl", 99999), ord(ch))
     chars = sorted((ch for ch in kai if ch in ancient or ch in kai), key=rank)
     buckets = {}
     n_with_ancient = 0
