@@ -106,10 +106,11 @@
     return data[ch] || null;
   }
 
-  /* 预取相邻字所在分片，让「随机看字」不卡 */
-  function prefetch(chars) {
+  /* 只预取「一键切换」会用到的少量分片，避免一次打二十多个请求 */
+  function prefetch(chars, limit = 2) {
     const seen = new Set();
     for (const ch of chars) {
+      if (seen.size >= limit) return;
       const b = bucketOf(ch);
       if (seen.has(b)) continue;
       seen.add(b);
@@ -413,10 +414,6 @@
       history.replaceState(null, '', url);
     }
 
-    // 预取同分片相邻字的分片
-    const idx = state.index.chars.indexOf(ch);
-    if (idx >= 0) prefetch(state.index.chars.slice(Math.max(0, idx - 12), idx + 13));
-
     // 滚动到舞台（若在首屏外）
     const rect = $('stage').getBoundingClientRect();
     if (rect.top > window.innerHeight * 0.55) {
@@ -709,7 +706,7 @@
       b.textContent = ch;
       quick.appendChild(b);
     }
-    prefetch(picks);
+    prefetch(picks, 1);
 
     buildTimeline();
     buildLibrary();
