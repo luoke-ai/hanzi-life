@@ -38,6 +38,12 @@
     return stem.split('-')[0];
   }
 
+  function stampLabel(rec, idx) {
+    const n = stageName(rec, idx);
+    if (n.indexOf('·') > -1) return n.split('·')[1].trim();
+    return n === '甲骨文' ? '甲骨' : n;
+  }
+
   function stageName(rec, idx) {
     const base = state.index.stages[idx].name;
     const fam = familyOf(rec, STAGE_KEYS[idx]);
@@ -207,6 +213,7 @@
       frame.classList.add('clean');
       svg.style.opacity = '0';
       $('glyphStamp').classList.remove('on');
+      $('glyphStamp').querySelector('span').textContent = stampLabel(state.rec, stageIdx);
       $('glyphCaption').innerHTML =
         `<span class="cap-l">${stage.name} · ${stage.era}</span>` +
         `<span class="cap-r">${stageIdx + 1} / ${state.index.stages.length}</span>`;
@@ -268,7 +275,9 @@
       );
     }
 
-    $('glyphStamp').classList.toggle('on', stageIdx !== 4);
+    const stamp = $('glyphStamp');
+    stamp.querySelector('span').textContent = stampLabel(state.rec, stageIdx);
+    stamp.classList.toggle('on', stageIdx !== 4);
     svg.setAttribute('aria-label', `${state.char || ''} 的${stageName(state.rec, stageIdx)}字形`);
     $('glyphCaption').innerHTML =
       `<span class="cap-l">${stageName(state.rec, stageIdx)} · ${stage.era}</span>` +

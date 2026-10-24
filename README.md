@@ -5,6 +5,8 @@
 
 在线地址：<https://luoke-ai.github.io/hanzi-life/>
 
+![汉字的一生](docs/preview.jpg)
+
 ## 特性
 
 - **任意汉字查询**：收录《通用规范汉字表》8105 字及其常见繁体、异体，共 9854 字，
