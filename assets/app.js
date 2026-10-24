@@ -269,6 +269,7 @@
     }
 
     $('glyphStamp').classList.toggle('on', stageIdx !== 4);
+    svg.setAttribute('aria-label', `${state.char || ''} 的${stageName(state.rec, stageIdx)}字形`);
     $('glyphCaption').innerHTML =
       `<span class="cap-l">${stageName(state.rec, stageIdx)} · ${stage.era}</span>` +
       `<span class="cap-r">${stageIdx + 1} / ${state.index.stages.length}</span>`;
@@ -587,14 +588,23 @@
       e.preventDefault();
       showChar($('q').value);
     });
+    let composing = false;
+    let debounce = 0;
+    $('q').addEventListener('compositionstart', () => { composing = true; });
+    $('q').addEventListener('compositionend', () => {
+      composing = false;
+      $('q').dispatchEvent(new Event('input', { bubbles: true }));
+    });
     $('q').addEventListener('input', (e) => {
       const v = e.target.value;
       $('clear').hidden = !v;
-      const m = v.match(CJK);
-      // 输入一个汉字就即时预览
-      if (m && v.length === 1) {
-        showChar(m[0]);
-      }
+      if (composing) return;
+      clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        const m = v.match(CJK);
+        // 输入一个汉字就即时预览
+        if (m && v.trim().length === 1) showChar(m[0]);
+      }, 180);
     });
     $('q').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {

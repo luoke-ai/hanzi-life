@@ -115,7 +115,7 @@ def main():
     sel = json.load(open(f"{BASE}/selection.json"))
     keep = set(json.load(open(f"{BASE}/keep.json"))["chars"])
     meta = {}
-    for ln in open(os.path.join(OUT, "chars.tsv"), encoding="utf-8"):
+    for ln in open(os.path.join(CACHE, "chars.tsv"), encoding="utf-8"):
         p = ln.rstrip("\n").split("\t")
         if len(p) >= 4:
             meta[p[0]] = int(p[3]) if p[3].isdigit() else 9999
