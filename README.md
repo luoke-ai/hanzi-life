@@ -45,6 +45,8 @@ scripts/              数据构建脚本（Commons 抓取、字体转曲、分�
 
 ### 重新构建数据
 
+> 脚本里的 `/tmp/hanzi` 是作者的抓取缓存目录（含 Unihan 原始数据与 Commons 原件），可按需改成自己的路径。
+
 ```bash
 python3 -m venv .venv && .venv/bin/pip install svgelements fonttools brotli
 # 1) 从 Wikimedia Commons 下载并归一化古文字形（需联网，注意限流）
