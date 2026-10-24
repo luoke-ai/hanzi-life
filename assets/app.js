@@ -305,22 +305,28 @@
   /* ── 右侧信息 ── */
   function renderInfo(i) {
     const s = state.index.stages[i];
-    const rec = state.rec;
+    const rec = state.rec || {};
     $('noteName').textContent = stageName(rec, i);
     $('noteSpan').textContent = s.span;
     $('noteBody').textContent = s.note;
 
-    const has = !!(rec && (STAGE_KEYS[i] === 'k' ? rec.k : rec[STAGE_KEYS[i]]));
-    const src = rec && rec.src ? rec.src[STAGE_KEYS[i]] : null;
-    const box = $('source');
-    if (src) {
-      const url = 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(src + '.svg');
-      box.innerHTML = `字形来源：<a href="${url}" target="_blank" rel="noopener">${src}.svg</a> · 公有领域`;
-    } else if (i === 4) {
-      box.innerHTML = '今文字形由霞鹜文楷轮廓转曲 · SIL OFL 1.1';
+    const key = STAGE_KEYS[i];
+    const has = !!(key === 'k' ? rec.k : rec[key]);
+    const src = rec.src ? rec.src[key] : null;
+    const parts = [];
+
+    if (i === 4) {
+      parts.push('今文字形由霞鹜文楷轮廓转曲 · SIL OFL 1.1');
+    } else if (has) {
+      if (rec.v) parts.push(`字形取自繁体「${rec.v}」`);
+      if (src) {
+        const url = 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(src + '.svg');
+        parts.push(`来源 <a href="${url}" target="_blank" rel="noopener">${src}.svg</a> · 公有领域`);
+      }
     } else {
-      box.innerHTML = has ? '' : '此期尚未见可靠字形，此处留白。';
+      parts.push('此期尚未见可靠字形，此处留白');
     }
+    $('source').innerHTML = parts.join(' · ');
   }
 
   function renderChar(ch) {

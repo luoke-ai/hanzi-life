@@ -85,11 +85,29 @@ def main():
             return (0, featured.index(ch), 0, 0)
         return (1, -n, m.get("lvl", 99999), ord(ch))
     chars = sorted((ch for ch in kai if ch in ancient or ch in kai), key=rank)
+
+    # 简繁/异体继承：简体字借用其繁体（或异体）的古文字形
+    variants = json.load(open(os.path.join(BASE, "variants.json"), encoding="utf-8"))
+    inherit = {}
+    for ch in chars:
+        if ancient.get(ch):
+            continue
+        cands = list(variants.get("trad", {}).get(ch, [])) + list(variants.get("simp", {}).get(ch, []))
+        for v in cands:
+            if ancient.get(v):
+                inherit[ch] = (v, ancient[v])
+                break
+    print("inherited:", len(inherit), flush=True)
+
     buckets = {}
     n_with_ancient = 0
     stage_counts = {s["key"]: 0 for s in STAGES}
+    have_ancient, have_quad, have_oracle = [], [], []
     for ch in chars:
         rec = ancient.get(ch, {})
+        via = None
+        if not rec and ch in inherit:
+            via, rec = inherit[ch]
         row = {}
         m = meta.get(ch, {})
         if m.get("p"):
@@ -103,13 +121,15 @@ def main():
         df = clean_def(m.get("df"))
         if df:
             row["df"] = df
+        if via:
+            row["v"] = via
         srcs = {}
         for s in STAGES:
             d = rec.get(s["script"])
             if d:
                 row[s["key"]] = d
                 stage_counts[s["key"]] += 1
-                info = sel.get(ch, {}).get(s["script"])
+                info = sel.get(via or ch, {}).get(s["script"])
                 if info:
                     srcs[s["key"]] = info["file"].replace("File:", "").rsplit(".", 1)[0]
         kd = kai.get(ch)
@@ -119,6 +139,11 @@ def main():
             row["src"] = srcs
         if any(s["key"] in row for s in STAGES[:4]):
             n_with_ancient += 1
+            have_ancient.append(ch)
+            if all(s["key"] in row for s in STAGES[:4]):
+                have_quad.append(ch)
+            if "o" in row:
+                have_oracle.append(ch)
         b = ord(ch) % BUCKETS
         buckets.setdefault(b, {})[ch] = row
 
@@ -129,9 +154,9 @@ def main():
         open(p, "w", encoding="utf-8").write(txt)
         total_bytes += len(txt.encode())
 
-    ancient_chars = "".join(ch for ch in chars if any(ancient.get(ch, {}).get(k) for k in ("oracle", "bronze", "seal", "clerical")))
-    quad_chars = "".join(ch for ch in chars if all(ancient.get(ch, {}).get(k) for k in ("oracle", "bronze", "seal", "clerical")))
-    oracle_chars = "".join(ch for ch in chars if ancient.get(ch, {}).get("oracle"))
+    ancient_chars = "".join(have_ancient)
+    quad_chars = "".join(have_quad)
+    oracle_chars = "".join(have_oracle)
     import time as _t
     index = {
         "version": str(int(_t.time())),
